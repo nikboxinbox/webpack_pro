@@ -1,8 +1,16 @@
 import path from "path";
 import HtmlWebpackPlugin from "html-webpack-plugin";
 import webpack from "webpack";
+import type { Configuration as DevServerConfiguration } from "webpack-dev-server";
 
-export default (env: any) => {
+interface EnvVariables {
+  mode: "development" | "production";
+  port: number;
+}
+
+export default (env: EnvVariables) => {
+  const isDev = env.mode === "development";
+
   const config: webpack.Configuration = {
     mode: env.mode ?? "development",
     entry: path.resolve(__dirname, "src", "index.ts"),
@@ -17,8 +25,8 @@ export default (env: any) => {
       new HtmlWebpackPlugin({
         template: path.resolve(__dirname, "public", "index.html"),
       }),
-      new webpack.ProgressPlugin(),
-    ],
+      isDev && new webpack.ProgressPlugin(),
+    ].filter(Boolean),
     module: {
       rules: [
         {
@@ -31,6 +39,13 @@ export default (env: any) => {
     resolve: {
       extensions: [".tsx", ".ts", ".js"],
     },
+    devServer: isDev
+      ? {
+          port: env.port ?? 3000,
+          open: true,
+        }
+      : undefined,
+    devtool: isDev ? "inline-source-map" : false,
   };
   return config;
 };
